@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  metadb:
+    image: mysql:8.0
+    container_name: metadb
+    env_file:
+      - ./metadb.env
+    ports:
+      - "30000:3306"
+    networks:
+      - mynet
+      
+  lb:
+    build: ./lb
+    image: lb
+    container_name: lb 
+    env_file:
+      - ./metadb.env
+    volumes:
+      - ./lb:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8000:8000"
+    command: ["python3","lb.py","-u","-DTHREADSAFE=1"]
+    networks:
+      - mynet
+  shard_manager:
+    build: ./shard_manager
+    image: shard_manager
+    container_name: shard_manager
+    env_file:
+      - ./metadb.env
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./shard_manager:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+
+    networks:
+      - mynet
+      
+  server:
+      build: 
+        context: ./server
+        dockerfile: Dockerfile.sqlite
+      image: serverimg
+      networks:
+        - mynet
+    
+networks:
+  mynet:
+    name: mynet
