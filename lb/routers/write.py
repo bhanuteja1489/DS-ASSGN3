@@ -65,7 +65,7 @@ def write(req: Any=Body(...)):
                     print(result.json())
                     curr_idx = result.json()["current_idx"]
                 shards[shard_id]["attr"][3]=curr_idx
-                mysql_cursor.execute("UPDATE ShardT SET valid_idx= ? WHERE Stud_id_low = ? AND Shard_id = ?",(curr_idx,shards[shard_id]["attr"][0],shard_id))
+                mysql_cursor.execute("UPDATE ShardT SET valid_idx= %s WHERE Stud_id_low = %s AND Shard_id = %s",(curr_idx,shards[shard_id]["attr"][0],shard_id))
                 mysql_conn.commit()
                 data_written.extend(queries)
         return {"message":f"{len(students)} Data entries added","status":"success"}

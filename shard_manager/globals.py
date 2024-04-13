@@ -5,30 +5,31 @@ import mysql.connector as conn
 import time
 import inspect
 import threading
-DB_FILE = "example.db"
-if os.path.exists(DB_FILE):
-    os.remove(DB_FILE)
+# DB_FILE = "example.db"
+# if os.path.exists(DB_FILE):
+#     os.remove(DB_FILE)
 
 # mysql_conn = sqlite3.connect('example.db', check_same_thread=False)
 # mysql_cursor = mysql_conn.cursor()
 
-# while True:
-#     try:
-#         mysql_conn = conn.connect(
-#             host="metadb",
-#             user=os.getenv("MYSQL_USER", "bhanu"),
-#             password=os.getenv("MYSQL_PASSWORD", "bhanu@1489"),
-#             database=os.getenv("MYSQL_DATABASE", "StudentDB"),
-#         )
-#         print("connected")
-#         break
+while True:
+    try:
+        mysql_conn = conn.connect(
+            host="metadb",
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            database=os.getenv("MYSQL_DATABASE"),
+        )
+        print("connected")
+        break
     
-#     except Exception as e:
-#         # print(e)
-#         time.sleep(0.02)
-# mysql_cursor = mysql_conn.cursor()
+    except Exception as e:
+        # print(e)
+        time.sleep(0.02)
+mysql_cursor = mysql_conn.cursor()
 
 app = FastAPI()
+# app = {}
 
 MAX_REQUEST_COUNT = 1e6
 MAX_SERVER_INDEX = 1024

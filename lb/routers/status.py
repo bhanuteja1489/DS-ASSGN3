@@ -18,7 +18,7 @@ def get_status():
         
         servers = {}
         for ser in app.server_list:
-            get_servers = "SELECT Shard_id FROM MapT WHERE Server_id=?"
+            get_servers = "SELECT Shard_id FROM MapT WHERE Server_id=%s"
             mysql_cursor.execute(get_servers, (ser, ))
             sh_rows = mysql_cursor.fetchall()
             servers[ser] = [sh[0] for sh in sh_rows]

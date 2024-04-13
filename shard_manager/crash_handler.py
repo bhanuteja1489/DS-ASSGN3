@@ -1,9 +1,8 @@
 from time import sleep
 import requests
 from requests.adapters import HTTPAdapter, Retry
-from lb.globals import app,get_db,close_db,acquire_write,release_write
-from lb.helpers import create_server
-import requests
+from globals import app,get_db,close_db,acquire_write,release_write
+from helpers import create_server
 
 
 CHECK_INTERVAL = 40 # 1 minute
@@ -78,10 +77,10 @@ def respawn_dead_server(dead_server,conn,cursor):
         app.hash_dict[sh].add_server(index, ipaddr, 8000)
 
         # Remove the shard - old server mapping from database       #TODO
-        cursor.execute("DELETE FROM MapT WHERE Server_id=? AND Shard_id=?",(dead_server,sh))
+        cursor.execute("DELETE FROM MapT WHERE Server_id=%s AND Shard_id=%s",(dead_server,sh))
         conn.commit()
         # get another server containing this shard from database & copy from that server       #TODO
-        cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id=?",(sh,))
+        cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id=%s",(sh,))
         server_sh = cursor.fetchall()
         students = None
         server_id = None
@@ -110,7 +109,7 @@ def respawn_dead_server(dead_server,conn,cursor):
         },timeout=15)
         print(f"Successfully copied shard:{sh} data from ", server_id," to ", new_server,flush=True) 
         # add the shard - new server mapping to database
-        cursor.execute("INSERT INTO MapT VALUES(?,?)",(sh,new_server))
+        cursor.execute("INSERT INTO MapT VALUES(%s,%s)",(sh,new_server))
         conn.commit()
         print(f"Successfully inserted shard:{sh} to server:{new_server} mapping into MapT",flush=True )
         
@@ -147,6 +146,11 @@ def check_server_health():
         finally:
             close_db(conn,cursor)
             print("finished checking server health",flush=True)
+            rsp = requests.post("http://lb:8000/sync_app",json={
+                "hash_dict":app.hash_dict,
+                "server_list":app.server_list,
+                "locks":app.locks
+            })
             release_write()  # release write lock
         
         sleep(CHECK_INTERVAL)

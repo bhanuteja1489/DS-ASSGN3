@@ -122,7 +122,7 @@ async def add_students_data(request: Request):
 
         for row in data:
             cursor.execute(
-                f"INSERT INTO {shard} (Stud_id, Stud_name, Stud_marks) VALUES (?, ?, ?)", 
+                f"INSERT INTO {shard} (Stud_id, Stud_name, Stud_marks) VALUES (%s, %s, %s)", 
                 (row['Stud_id'], row['Stud_name'], row['Stud_marks'])
             )
 
@@ -155,7 +155,7 @@ async def update_student_data(request: Request):
         stud_marks = data["Stud_marks"]
 
         cursor.execute(
-            f"UPDATE {shard} SET Stud_name = ?, Stud_marks = ? WHERE Stud_id = ?", 
+            f"UPDATE {shard} SET Stud_name = %s, Stud_marks = %s WHERE Stud_id = %s", 
             (stud_name, stud_marks, stud_id)
         )
 
@@ -181,7 +181,7 @@ async def delete_student_data(request: Request):
         shard = req["shard"]
         stud_id = req["Stud_id"]
 
-        cursor.execute(f"DELETE FROM {shard} WHERE Stud_id = ?", (stud_id,))
+        cursor.execute(f"DELETE FROM {shard} WHERE Stud_id = %s", (stud_id,))
 
         conn.commit()
 

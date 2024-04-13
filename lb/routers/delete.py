@@ -15,7 +15,7 @@ def delete_entry(req: Any = Body(...)):
 
         Stud_id = req["Stud_id"]
         # get the shard corresponding to the stud_id 
-        mysql_cursor.execute("SELECT DISTINCT Shard_id FROM ShardT  WHERE Stud_id_low <= ? AND Stud_id_low + Shard_size > ?",(Stud_id,Stud_id))
+        mysql_cursor.execute("SELECT DISTINCT Shard_id FROM ShardT  WHERE Stud_id_low <= %s AND Stud_id_low + Shard_size > %s",(Stud_id,Stud_id))
         result = mysql_cursor.fetchone()
         print(result)
 
@@ -27,7 +27,7 @@ def delete_entry(req: Any = Body(...)):
 
         #get all servers that contain the shard
 
-            mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id = ?",(shard_id,))
+            mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id = %s",(shard_id,))
             servers = mysql_cursor.fetchall()
             print(servers)
             if servers:

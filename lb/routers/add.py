@@ -53,7 +53,7 @@ def add_servers(req: Any = Body(...)):
                     # need to handle the case when one of the server fails, we need to stop the already created servers or do something else
                     # adding entry in MapT
 
-                    add_mapt_query = "INSERT INTO MapT VALUES (?,?)"
+                    add_mapt_query = "INSERT INTO MapT VALUES (%s,%s)"
                     mysql_cursor.execute(add_mapt_query,(sh,server_name))
                     mysql_conn.commit()
                 
@@ -79,7 +79,7 @@ def add_servers(req: Any = Body(...)):
                     new_shardids = [shard_info["Shard_id"] for shard_info in new_shards]
                     print(new_shardids)
                     if sh not in new_shardids:
-                            mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id=?",(sh,))
+                            mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id=%s",(sh,))
                             sh_servers = mysql_cursor.fetchall()
                             sh_students = []
                             for sh_server in sh_servers:
@@ -107,7 +107,7 @@ def add_servers(req: Any = Body(...)):
                                 
         # adding entries in ShardT
         for shard in new_shards:
-            shard_query ="INSERT INTO ShardT VALUES (?,?,?,?)"
+            shard_query ="INSERT INTO ShardT VALUES (%s,%s,%s,%s)"
             mysql_cursor.execute(shard_query,(shard["Stud_id_low"],shard["Shard_id"],shard["Shard_size"],shard["Stud_id_low"]))
             mysql_conn.commit()
         

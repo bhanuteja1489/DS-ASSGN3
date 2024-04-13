@@ -16,7 +16,7 @@ async def update_shard(req: Any = Body(...)):
 
     Stud_id = req["Stud_id"]
     Student = req["data"]
-    mysql_cursor.execute("SELECT DISTINCT Shard_id FROM ShardT  WHERE Stud_id_low <= ? AND Stud_id_low + Shard_size > ?",(Stud_id,Stud_id))
+    mysql_cursor.execute("SELECT DISTINCT Shard_id FROM ShardT  WHERE Stud_id_low <= %s AND Stud_id_low + Shard_size > %s",(Stud_id,Stud_id))
     result = mysql_cursor.fetchone()
     print("here")
     print(result)
@@ -26,7 +26,7 @@ async def update_shard(req: Any = Body(...)):
         #get lock on the shard
 
         #get all servers that contain the shard
-        mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id = ?",(shard_id,))
+        mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id = %s",(shard_id,))
         servers = mysql_cursor.fetchall()
         print("inside")
         print(servers)

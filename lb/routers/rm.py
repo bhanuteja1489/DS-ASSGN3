@@ -60,11 +60,11 @@ def rm_servers(req: Any=Body(...)):
         remove_servers(rm_ser_list)
         
         for ser in removing_servers:
-            find_shards_query = "SELECT Shard_id FROM MapT WHERE Server_id=?"
+            find_shards_query = "SELECT Shard_id FROM MapT WHERE Server_id=%s"
             mysql_cursor.execute(find_shards_query, (ser, ))
             shards = mysql_cursor.fetchall()
 
-            remove_entry_query = "DELETE FROM MapT WHERE Server_id=?"
+            remove_entry_query = "DELETE FROM MapT WHERE Server_id=%s"
             mysql_cursor.execute(remove_entry_query, (ser, ))
 
             mysql_conn.commit()
@@ -73,14 +73,14 @@ def rm_servers(req: Any=Body(...)):
                 try:
                     app.hash_dict[sh[0]].remove_server(removing_servers[ser]["index"])
 
-                    check_shard_query = "SELECT * FROM MapT WHERE Shard_id=?"
+                    check_shard_query = "SELECT * FROM MapT WHERE Shard_id=%s"
                     mysql_cursor.execute(check_shard_query, (sh[0], ))
                     chk = mysql_cursor.fetchall()
 
                     if len(chk) == 0:
                         app.hash_dict.pop(sh[0])
                         app.locks.pop(sh[0])
-                        remove_shard_query = "DELETE FROM ShardT WHERE Shard_id=?"
+                        remove_shard_query = "DELETE FROM ShardT WHERE Shard_id=%s"
                         mysql_cursor.execute(remove_shard_query, (sh[0], ))
 
                         mysql_conn.commit()

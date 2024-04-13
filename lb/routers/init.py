@@ -100,7 +100,7 @@ def init_system(req: Any=Body(...)):
                 app.hash_dict[sh].add_server(app.server_list[server_name]['index'], ip[server_name], 8000)
                 
                 ## add shard-server mapping to database
-                add_mapt_query = "INSERT INTO MapT VALUES (?, ?)"
+                add_mapt_query = "INSERT INTO MapT VALUES (%s, %s)"
                 print(add_mapt_query)
                 try:
                     mysql_cursor.execute(add_mapt_query,(sh,server_name))
@@ -111,7 +111,7 @@ def init_system(req: Any=Body(...)):
 
         # creating all shard entries in ShardT
         for shard in shards:
-            shard_query = "INSERT INTO ShardT VALUES (?,?,?,?)"
+            shard_query = "INSERT INTO ShardT VALUES (%s,%s,%s,%s)"
 
             try:
                 mysql_cursor.execute(shard_query,(shard["Stud_id_low"],shard["Shard_id"],shard["Shard_size"],shard["Stud_id_low"]))
@@ -129,6 +129,11 @@ def init_system(req: Any=Body(...)):
         close_db(mysql_conn,mysql_cursor)
         print("servers:")
         print(app.server_list.keys())
+        requests.post("http://shard_manager:8000/sync_app",json={
+             "hash_dict":app.hash_dict,
+             "server_list":app.server_list,
+             "locks":app.locks
+        })
         release_write()
 
 
