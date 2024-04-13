@@ -8,6 +8,10 @@ services:
       - ./metadb.env
     networks:
       - mynet
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "7999:3306"
       
   lb:
     build: ./lb
