@@ -124,6 +124,7 @@ def init_system(req: Any=Body(...)):
             "status" : "success"
         }
     except Exception as e:
+        print(e)
         return "some error"
     finally:
         close_db(mysql_conn,mysql_cursor)

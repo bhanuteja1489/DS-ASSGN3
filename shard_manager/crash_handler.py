@@ -146,11 +146,11 @@ def check_server_health():
         finally:
             close_db(conn,cursor)
             print("finished checking server health",flush=True)
-            rsp = requests.post("http://lb:8000/sync_app",json={
-                "hash_dict":app.hash_dict,
-                "server_list":app.server_list,
-                "locks":app.locks
-            })
+            # rsp = requests.post("http://lb:8000/sync_app",json={
+            #     "hash_dict":app.hash_dict,
+            #     "server_list":app.server_list,
+            #     "locks":app.locks
+            # })
             release_write()  # release write lock
         
         sleep(CHECK_INTERVAL)

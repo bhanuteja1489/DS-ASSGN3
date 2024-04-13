@@ -25,6 +25,7 @@ services:
       - mynet
   shard_manager:
     build: ./shard_manager
+    image: shard_manager
     container_name: shard_manager
     env_file:
       - ./metadb.env
@@ -32,6 +33,8 @@ services:
       - "8001:8000"
     volumes:
       - ./shard_manager:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+
     networks:
       - mynet
       
