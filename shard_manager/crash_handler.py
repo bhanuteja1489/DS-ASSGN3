@@ -1,11 +1,13 @@
 from time import sleep
 import requests
 from requests.adapters import HTTPAdapter, Retry
-from globals import app,get_db,close_db,acquire_write,release_write
+from globals import app,get_db,close_db,appLock
 from helpers import create_server
 
-
+# todo : need to elect a new primary leader if the primary leader is dead
 CHECK_INTERVAL = 40 # 1 minute
+
+G = {"to_remove":[],"to_add":[]}
 
 def is_alive(server):
     print(f"Checking health of {server} ........",flush=True)
@@ -33,7 +35,7 @@ def is_alive(server):
 
 
 def respawn_dead_server(dead_server,conn,cursor):
-    
+    global G
     new_server = f"new_{dead_server}"
     
     print(f"Respawning {dead_server} as {new_server} ......",flush=True)
@@ -73,8 +75,11 @@ def respawn_dead_server(dead_server,conn,cursor):
     for sh in shards:
         # changing the hash info
         print(f".....Restoring {sh} ",flush=True)
-        app.hash_dict[sh].remove_server(index)
-        app.hash_dict[sh].add_server(index, ipaddr, 8000)
+        G["to_remove"].append((sh,index))
+        G["to_add"].append((sh,index,ipaddr,8000))
+    # need to handle this in load balancer
+        # app.hash_dict[sh].remove_server(index)
+        # app.hash_dict[sh].add_server(index, ipaddr, 8000)
 
         # Remove the shard - old server mapping from database       #TODO
         cursor.execute("DELETE FROM MapT WHERE Server_id=%s AND Shard_id=%s",(dead_server,sh))
@@ -128,8 +133,8 @@ def check_server_health():
     while 1:
         try:
 
-            # acquire write lock
-            acquire_write()
+            # acquire  lock on app
+            appLock.acquire()
             print("Checking server health ....",flush=True)
             server_names = list(app.server_list.keys())
             print("Server names: ",flush=True)
@@ -146,12 +151,14 @@ def check_server_health():
         finally:
             close_db(conn,cursor)
             print("finished checking server health",flush=True)
-            # rsp = requests.post("http://lb:8000/sync_app",json={
-            #     "hash_dict":app.hash_dict,
-            #     "server_list":app.server_list,
-            #     "locks":app.locks
-            # })
-            release_write()  # release write lock
+            if G["to_remove"]:
+                rsp = requests.post("http://lb:8000/sync_app",json={
+                    "server_list":app.server_list,
+                    "to_remove": G["to_remove"],
+                    "to_add": G["to_add"]
+                    # need to add information about primary server
+                })
+            appLock.release()
         
         sleep(CHECK_INTERVAL)
             
