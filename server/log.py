@@ -26,7 +26,7 @@ class Log:
         return Log(segments[0], segments[1], segments[2], segments[3])
 
     def to_string(self):
-        return f"{self.id}|{self.log_type.name}|{self.data}|{self.timestamp}"
+        return f"{self.id}|{self.log_type}|{self.data}|{self.timestamp}"
 
     def __repr__(self):
         return f"id={self.id}, log_type={self.log_type}, data={self.data}, timestamp={self.timestamp}"
@@ -67,21 +67,59 @@ class FileLogger:
         if(last_log_id is None):
             return 0
         return last_log_id
+    
+    def get_file_data(self,shard):
+        log_file = shard+".log"
+        if self.log_directory is None:
+            self.log_directory = "logs"
+        with open(os.path.join(self.log_directory, log_file), 'r') as f:
+            log_data = f.read()
+        return log_data
+    
+    def overwrite_file(self, log_data,shard):
+        log_file = shard+".log"
+        try:
+            with open(os.path.join(self.log_directory, log_file), 'w') as f:
+                f.write(log_data)
+            print("Log file overwritten successfully.")
+        except Exception as e:
+            print("Error:", str(e))
+    def get_requests_from_given_index(self, shard, index):
+        log_file = f"{shard}.log"
+        requests = []
 
-# logger = FileLogger("logs", "logfile.log")
+        try:
+            with open(os.path.join(self.log_directory, log_file), 'r') as f:
+                lines = f.readlines()
+                for line in lines[index:]:
+                    log = Log.create_from_string(line.strip())
+                    request_info = {
+                        "type": log.log_type,
+                        "data": log.data
+                    }
+                    requests.append(request_info)
+        except FileNotFoundError:
+            print(f"Log file '{log_file}' not found.")
+        except Exception as e:
+            print(f"Error while reading log file: {str(e)}")
 
-# # Creating a log instance
-# log = Log("5", LogType(0), "Example log", datetime.now())
+        return requests
 
-# # Adding the log to the file
-# logger.add_log(log)
 
-# # Reading logs
-# logs = logger.read_logs()
-# print("Logs:")
-# for log in logs:
-#     print(log)
+logger = FileLogger("logs", "logfile.log")
 
-# # Getting last log id
-# last_log_id = logger.get_last_log_id()
-# print("Last Log ID:", last_log_id)
+# Creating a log instance
+log = Log("5", LogType(0), "Example log", datetime.now())
+
+# Adding the log to the file
+logger.add_log(log)
+
+# Reading logs
+logs = logger.read_logs()
+print("Logs:")
+for log in logs:
+    print(log)
+
+# Getting last log id
+last_log_id = logger.get_last_log_id()
+print("Last Log ID:", last_log_id)

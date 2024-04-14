@@ -80,48 +80,46 @@ def respawn_dead_server(dead_server,conn,cursor):
     # need to handle this in load balancer
         # app.hash_dict[sh].remove_server(index)
         # app.hash_dict[sh].add_server(index, ipaddr, 8000)
+        cursor.execute("Select Server_id, Shard_id, Primary_ FROM MapT WHERE Server_id=%s AND Shard_id=%s AND Primary_=1",(dead_server,sh))
+        mapt_rows = cursor.fetchall()
+        PRIMARY_SERVER = None
+        for row in mapt_rows:
+            if(row[2]==1):
+                PRIMARY_SERVER = row[0]
 
         # Remove the shard - old server mapping from database       #TODO
         cursor.execute("DELETE FROM MapT WHERE Server_id=%s AND Shard_id=%s",(dead_server,sh))
         conn.commit()
-        # get another server containing this shard from database & copy from that server       #TODO
-        cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id=%s",(sh,))
-        server_sh = cursor.fetchall()
-        students = None
-        server_id = None
-        for __server in server_sh:
-        # now make a req to    /copy endpoint
-            try:
-                server_id = __server[0]
-                resp = requests.get(f"http://{app.server_list[server_id]['ip']}:8000/copy",json={
-                    "shards": [sh]
-                },timeout=15)
-                students = resp.json()[sh]
-                break
-            except requests.RequestException as e:
-                print(f"Request to {server_id} failed",flush=True)
-                print("Trying with another server",flush=True)
+        
+        while(PRIMARY_SERVER is None or PRIMARY_SERVER==dead_server):
+            elect_primary()
+            cursor.execute("Select Server_id, Shard_id, Primary_ FROM MapT WHERE Server_id=%s AND Shard_id=%s AND Primary_=1",(dead_server,sh))
+            mapt_rows = cursor.fetchall()
+            for row in mapt_rows:
+                if(row[2]==1):
+                    PRIMARY_SERVER = row[0]
 
-        print("=== Student List ===",flush=True)
-        print(students,flush=True)
-        print("====================",flush=True)
+        try:
+            resp = requests.get(f"http://{ipaddr}:8000/fetch_log_data",json={
+                "shards": sh,
+                "servers": PRIMARY_SERVER,
+                "own_ip":ipaddr
+            },timeout=15)
+        except requests.RequestException as e:
+            print(f"Request to {ipaddr} failed",flush=True)
 
-            # copy the shard data to the newly spawned server 
-        requests.post(f"http://{ipaddr}:8000/write",json={
-            "shard":sh,
-            "curr_idx": 0, 
-            "data": students
-        },timeout=15)
-        print(f"Successfully copied shard:{sh} data from ", server_id," to ", new_server,flush=True) 
         # add the shard - new server mapping to database
         cursor.execute("INSERT INTO MapT VALUES(%s,%s,0)",(sh,new_server))
         conn.commit()
         print(f"Successfully inserted shard:{sh} to server:{new_server} mapping into MapT",flush=True )
         
-        # clean up down by check_server_health
-
-
     print("Done!",flush=True)
+        # clean up down by check_server_health
+    return {
+            "message": "Successfully respawned dead servers",
+            "status": "success"
+        } 
+
     
     
     
@@ -172,7 +170,10 @@ def elect_primary():
 
             mysql_conn.commit() # at last
 
-                 
+        return {
+            "message": "Successfully elected Primaries for all shards",
+            "status": "success"
+        }         
 
         # app.server_list
     except Exception as e:

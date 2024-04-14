@@ -83,6 +83,79 @@ async def initialize_shards(request: Request):
         raise HTTPException(status_code=400, detail="Invalid request")
 
 
+@app.get("/fetch_log_data")
+async def fetch_log_data(request: Request):
+    try:
+        req = await request.json()
+        shard = req["shards"]
+        PRIMARY_SERVER = req["servers"]
+        ipaddr = req["own_ip"]
+        try:
+            resp = requests.get(
+                f"http://{PRIMARY_SERVER}:8000/copy",
+                json={"shards": [shard]},
+                timeout=15,
+            )
+            resp = resp.json()
+            print('response of copy : ',resp)
+            students = resp[shard]
+            log_data = resp["log_data_" + shard]
+            commit_index = resp["commit_" + shard]
+            print("=== Student List ===", flush=True)
+            print(students, flush=True)
+            print("====================", flush=True)
+            print("=== Log Data ===", flush=True)
+            print(log_data, flush=True)
+            print("====================", flush=True)
+            logger[shard].overwrite_file(log_data, shard)
+            requests.post(
+                f"http://{ipaddr}:8000/write",
+                json={"shard": shard, "data": students},
+                timeout=15,
+            )
+            list_to_update = logger[shard].get_requests_from_given_index(
+                shard, int(commit_index) + 1
+            )
+            print(list_to_update)
+            for row in list_to_update:
+                if row["type"].lower() == "write":
+                    requests.post(
+                        f"http://{ipaddr}:8000/write",
+                        json={"shard": shard, "data": row["data"]["data"]},
+                        timeout=15,
+                    )
+                elif row["type"].lower() == "delete":
+                    requests.delete(
+                        f"http://{ipaddr}:8000/del",
+                        json={"shard": shard, "Stud_id": row["data"]["Stud_id"]},
+                        timeout=15,
+                    )
+                elif row["type"].lower() == "update":
+                    # "shard": shard, "Stud_id": stud_id, "data": data
+                    requests.put(
+                        f"http://{ipaddr}:8000/update",
+                        json={"shard": shard, "Stud_id": row["data"]["Stud_id"],"data": row["data"]["data"]},
+                        timeout=15,
+                    )
+                else:
+                    print("Incorrect type ", row["type"])
+            print(
+                f"Successfully copied shard:{shard} data from ",
+                PRIMARY_SERVER,
+                flush=True,
+            )
+
+        except requests.RequestException as e:
+            print(e)
+            print(f"Request to {server_id} failed", flush=True)
+            print("Trying with another server", flush=True)
+
+    except:
+        raise HTTPException(status_code=400, detail="Invalid request")
+
+    return {"message": "Fetched the data successfully", "status": "success"}
+
+
 @app.get("/copy")
 async def get_all_shards_data(request: Request):
     try:
@@ -100,6 +173,9 @@ async def get_all_shards_data(request: Request):
                 }
                 for row in rows
             ]
+            log_data = logger[shard].get_file_data(shard)
+            response["log_data_" + str(shard)] = log_data
+            response["commit_" + str(shard)] = commit[shard]
         response["status"] = "success"
         return response
 
