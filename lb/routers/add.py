@@ -53,7 +53,7 @@ def add_servers(req: Any = Body(...)):
                     # need to handle the case when one of the server fails, we need to stop the already created servers or do something else
                     # adding entry in MapT
 
-                    add_mapt_query = "INSERT INTO MapT VALUES (%s,%s)"
+                    add_mapt_query = "INSERT INTO MapT VALUES (%s,%s,0)"
                     mysql_cursor.execute(add_mapt_query,(sh,server_name))
                     mysql_conn.commit()
                 

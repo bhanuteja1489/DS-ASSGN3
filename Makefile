@@ -1,4 +1,5 @@
 start:
+	make clean
 	docker-compose up -d metadb
 	docker-compose up -d shard_manager
 	docker-compose up lb
@@ -16,4 +17,8 @@ clean_servers:
 remove_images:
 	-docker rmi -f serverimg lb
 
+connect_db:
+	mysql --host localhost -u kayden -P 30000 -pkayden@123
 # to get logs of any container use:      docker logs -f CONTAINER_ID OR NAME
+# mysql --host localhost -u kayden -P 30000 -pkayden@123 to check database
+# use metadb;select * from MapT;

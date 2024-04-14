@@ -1,4 +1,4 @@
-from crash_handler import check_server_health
+from crash_handler import check_server_health,elect_primary
 from fastapi import FastAPI, Request, HTTPException
 from threading import Thread
 from globals import app,appLock
@@ -14,6 +14,7 @@ async def sync_app(request: Request):
             if "schema" in req:
                 app.schema = req["schema"]
             print(app.server_list)
+            elect_primary()
             return {
                 "message": "Successfully updated",
                 "status": "success"

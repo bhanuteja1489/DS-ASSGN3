@@ -24,35 +24,39 @@ async def update_shard(req: Any = Body(...)):
         shard_id = result[0]
         
         #get lock on the shard
-
-        #get all servers that contain the shard
-        mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id = %s",(shard_id,))
-        servers = mysql_cursor.fetchall()
-        print("inside")
-        print(servers)
-        if servers:
-            for server in servers:
-                server = server[0]
-                payload = {
+        mysql_cursor.execute("SELECT Server_id,Primary_ FROM MapT WHERE Shard_id=%s",(shard_id,))
+        rows = mysql_cursor.fetchall()
+        PRIMARY_SERVER = None
+        data = {
                     "shard":shard_id,
                     "Stud_id":Stud_id,
-                    "data":Student
+                    "data":Student,
+                    "secondary_servers": []
                 }
-                result = requests.put(f"http://{server}:8000/update",json=payload,timeout=15)
-                
-                if not result.ok:
-                    raise HTTPException(status_code=500,detail="Internal error")
+        for row in rows:
+            server_id ,primary = row
+            if primary:
+                PRIMARY_SERVER = server_id
+            else:
+                data["secondary_servers"].append(server_id)
+        
+        if PRIMARY_SERVER:
+            result = requests.put(f"http://{PRIMARY_SERVER}:8000/update",json=data,timeout=15)
+            
+            if not result.ok:
+                raise HTTPException(status_code=500,detail="Internal error")
+        
             return {
                 "message": f"Data entry for Stud_id:{Stud_id} updated",
                 "status" : "success"
             }
-            
         else:
             return {
                 "message" : "No server found",
                 "status"  : "failure"
             }
  except Exception as e:
+    print(e)
     return "some error"
  finally: 
     close_db(mysql_conn,mysql_cursor)

@@ -114,7 +114,7 @@ def respawn_dead_server(dead_server,conn,cursor):
         },timeout=15)
         print(f"Successfully copied shard:{sh} data from ", server_id," to ", new_server,flush=True) 
         # add the shard - new server mapping to database
-        cursor.execute("INSERT INTO MapT VALUES(%s,%s)",(sh,new_server))
+        cursor.execute("INSERT INTO MapT VALUES(%s,%s,0)",(sh,new_server))
         conn.commit()
         print(f"Successfully inserted shard:{sh} to server:{new_server} mapping into MapT",flush=True )
         
@@ -126,8 +126,57 @@ def respawn_dead_server(dead_server,conn,cursor):
     
     
     
+# def check_primary_util():
+
     
-    
+def elect_primary():
+    print('entered elect primary')
+    try:
+        print('started election')
+        mysql_conn,cursor = get_db()
+        cursor.execute(f"SELECT distinct Shard_id FROM MapT")
+        shards_rows = cursor.fetchall()
+        cursor.execute(f"Select Shard_id from MapT where Primary_=1")
+        primary_shard_rows = cursor.fetchall()
+        print(primary_shard_rows)
+        for row in shards_rows:
+            shard = row[0]
+            if shard in [shard_row[0] for shard_row in primary_shard_rows]:
+                continue
+            print(shard)
+            cursor.execute(f"Select Server_id from MapT where Shard_id=%s",(shard,))
+            servers_with_given_shard_rows = cursor.fetchall()
+            print(servers_with_given_shard_rows)
+            votes = {}
+            for row_server in servers_with_given_shard_rows:
+                server = row_server[0]
+                try:
+                    rsp = requests.post(f"http://{server}:8000/commit",json={
+                            "shards":[shard]
+                        })
+                    rsp = rsp.json()
+                    print(rsp)
+                    for shard_value in rsp['shards']:
+                        votes[server] = shard_value
+                except requests.RequestException as e:
+                    print(str(e))
+                    continue
+            max_votes = max(votes.items(), key=lambda x: x[1])
+            max_votes_server = max_votes[0]
+            print("Elected Server:",max_votes)
+            rsp = requests.post(f"http://{max_votes_server}:8000/primary",json={
+                        "shards":[shard]
+                    })
+            cursor.execute(f"Update MapT SET Primary_=1 where Server_id=%s AND Shard_id=%s",(max_votes_server,shard))
+            
+
+            mysql_conn.commit() # at last
+
+                 
+
+        # app.server_list
+    except Exception as e:
+        print(f"Error: {e}",flush=True)
 
 def check_server_health():
     while 1:
