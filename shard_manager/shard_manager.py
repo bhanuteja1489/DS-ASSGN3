@@ -14,6 +14,9 @@ async def sync_app(request: Request):
             if "schema" in req:
                 app.schema = req["schema"]
             print(app.server_list)
+            print('sync app server is calling elect primary')
+            print('-------------------------------------------')
+            print('-------------------------------------------')
             elect_primary()
             return {
                 "message": "Successfully updated",

@@ -106,20 +106,20 @@ class FileLogger:
         return requests
 
 
-logger = FileLogger("logs", "logfile.log")
+# logger = FileLogger("logs", "logfile.log")
 
-# Creating a log instance
-log = Log("5", LogType(0), "Example log", datetime.now())
+# # Creating a log instance
+# log = Log("5", LogType(0), "Example log", datetime.now())
 
-# Adding the log to the file
-logger.add_log(log)
+# # Adding the log to the file
+# logger.add_log(log)
 
-# Reading logs
-logs = logger.read_logs()
-print("Logs:")
-for log in logs:
-    print(log)
+# # Reading logs
+# logs = logger.read_logs()
+# print("Logs:")
+# for log in logs:
+#     print(log)
 
-# Getting last log id
-last_log_id = logger.get_last_log_id()
-print("Last Log ID:", last_log_id)
+# # Getting last log id
+# last_log_id = logger.get_last_log_id()
+# print("Last Log ID:", last_log_id)

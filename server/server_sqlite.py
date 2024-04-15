@@ -49,12 +49,15 @@ async def initialize_shards(request: Request):
         # dtypes as number, string, string
         schema = req["schema"]
         shards = req["shards"]
+        print('schema:',schema)
+        print('shards: ',shards)
+        print('started config')
         for shard in shards:
-            logger[shard] = FileLogger("logs", shard + ".log")
+            logger[shard] = FileLogger("logs", str(shard) + ".log")
             commit[shard] = 0
             primary[shard] = 0
         message = ""
-
+        print('created logger,commit and primary maps')
         # Create a table for each shard
         for i, shard in enumerate(shards):
             # Hardcoded schema for now since given data-types are wrong
@@ -80,6 +83,7 @@ async def initialize_shards(request: Request):
         raise HTTPException(status_code=500, detail=f"An error occurred: {err}")
 
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=400, detail="Invalid request")
 
 
@@ -94,7 +98,6 @@ async def fetch_log_data(request: Request):
             resp = requests.get(
                 f"http://{PRIMARY_SERVER}:8000/copy",
                 json={"shards": [shard]},
-                timeout=15,
             )
             resp = resp.json()
             print('response of copy : ',resp)
@@ -108,11 +111,16 @@ async def fetch_log_data(request: Request):
             print(log_data, flush=True)
             print("====================", flush=True)
             logger[shard].overwrite_file(log_data, shard)
-            requests.post(
-                f"http://{ipaddr}:8000/write",
-                json={"shard": shard, "data": students},
-                timeout=15,
-            )
+            print('last log id afte inserting log data',logger[shard].get_last_log_id())
+            # requests.post(
+            #     f"http://{ipaddr}:8000/write",
+            #     json={"shard": shard, "data": students},
+            # )
+            for student in students:
+                # Using parameterized query to avoid SQL injection
+                cursor.execute(f"INSERT INTO {shard} (Stud_id, Stud_name, Stud_marks) VALUES (?, ?, ?)",
+                            (student['Stud_id'], student['Stud_name'], student['Stud_marks']))
+
             list_to_update = logger[shard].get_requests_from_given_index(
                 shard, int(commit_index) + 1
             )
@@ -122,20 +130,17 @@ async def fetch_log_data(request: Request):
                     requests.post(
                         f"http://{ipaddr}:8000/write",
                         json={"shard": shard, "data": row["data"]["data"]},
-                        timeout=15,
                     )
                 elif row["type"].lower() == "delete":
                     requests.delete(
                         f"http://{ipaddr}:8000/del",
                         json={"shard": shard, "Stud_id": row["data"]["Stud_id"]},
-                        timeout=15,
                     )
                 elif row["type"].lower() == "update":
                     # "shard": shard, "Stud_id": stud_id, "data": data
                     requests.put(
                         f"http://{ipaddr}:8000/update",
                         json={"shard": shard, "Stud_id": row["data"]["Stud_id"],"data": row["data"]["data"]},
-                        timeout=15,
                     )
                 else:
                     print("Incorrect type ", row["type"])
