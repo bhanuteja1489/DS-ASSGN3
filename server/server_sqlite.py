@@ -49,15 +49,15 @@ async def initialize_shards(request: Request):
         # dtypes as number, string, string
         schema = req["schema"]
         shards = req["shards"]
-        print('schema:',schema)
-        print('shards: ',shards)
-        print('started config')
+        print("schema:", schema)
+        print("shards: ", shards)
+        print("started config")
         for shard in shards:
             logger[shard] = FileLogger("logs", str(shard) + ".log")
             commit[shard] = 0
             primary[shard] = 0
         message = ""
-        print('created logger,commit and primary maps')
+        print("created logger,commit and primary maps")
         # Create a table for each shard
         for i, shard in enumerate(shards):
             # Hardcoded schema for now since given data-types are wrong
@@ -86,6 +86,40 @@ async def initialize_shards(request: Request):
         print(e)
         raise HTTPException(status_code=400, detail="Invalid request")
 
+@app.post("/update_local_data")
+async def update_local_data(request: Request):
+    try:
+        req = await request.json()
+        server = req["servers"]
+        shard = req["shards"]
+        list_to_update = req["data"]
+        for row in list_to_update:
+            if row["type"].lower() == "write":
+                requests.post(
+                    f"http://{server}:8000/write",
+                    json={"shard": shard, "data": row["data"]["data"]},
+                )
+            elif row["type"].lower() == "delete":
+                requests.delete(
+                    f"http://{server}:8000/del",
+                    json={"shard": shard, "Stud_id": row["data"]["Stud_id"]},
+                )
+            elif row["type"].lower() == "update":
+                # "shard": shard, "Stud_id": stud_id, "data": data
+                requests.put(
+                    f"http://{server}:8000/update",
+                    json={
+                        "shard": shard,
+                        "Stud_id": row["data"]["Stud_id"],
+                        "data": row["data"]["data"],
+                    },
+                )
+            else:
+                print("Incorrect type ", row["type"])
+    except:
+        raise HTTPException(status_code=400, detail="Invalid request")
+
+    return {"message": "Updated the local data successfully", "status": "success"}
 
 @app.get("/fetch_log_data")
 async def fetch_log_data(request: Request):
@@ -100,7 +134,7 @@ async def fetch_log_data(request: Request):
                 json={"shards": [shard]},
             )
             resp = resp.json()
-            print('response of copy : ',resp)
+            print("response of copy : ", resp)
             students = resp[shard]
             log_data = resp["log_data_" + shard]
             commit_index = resp["commit_" + shard]
@@ -111,15 +145,19 @@ async def fetch_log_data(request: Request):
             print(log_data, flush=True)
             print("====================", flush=True)
             logger[shard].overwrite_file(log_data, shard)
-            print('last log id afte inserting log data',logger[shard].get_last_log_id())
+            print(
+                "last log id afte inserting log data", logger[shard].get_last_log_id()
+            )
             # requests.post(
             #     f"http://{ipaddr}:8000/write",
             #     json={"shard": shard, "data": students},
             # )
             for student in students:
                 # Using parameterized query to avoid SQL injection
-                cursor.execute(f"INSERT INTO {shard} (Stud_id, Stud_name, Stud_marks) VALUES (?, ?, ?)",
-                            (student['Stud_id'], student['Stud_name'], student['Stud_marks']))
+                cursor.execute(
+                    f"INSERT INTO {shard} (Stud_id, Stud_name, Stud_marks) VALUES (?, ?, ?)",
+                    (student["Stud_id"], student["Stud_name"], student["Stud_marks"]),
+                )
 
             list_to_update = logger[shard].get_requests_from_given_index(
                 shard, int(commit_index) + 1
@@ -140,7 +178,11 @@ async def fetch_log_data(request: Request):
                     # "shard": shard, "Stud_id": stud_id, "data": data
                     requests.put(
                         f"http://{ipaddr}:8000/update",
-                        json={"shard": shard, "Stud_id": row["data"]["Stud_id"],"data": row["data"]["data"]},
+                        json={
+                            "shard": shard,
+                            "Stud_id": row["data"]["Stud_id"],
+                            "data": row["data"]["data"],
+                        },
                     )
                 else:
                     print("Incorrect type ", row["type"])
@@ -256,40 +298,58 @@ async def add_students_data(request: Request):
         print(req)
         shard = req["shard"]
         data = req["data"]
-        for row in data:
-            id = int(logger[shard].get_last_log_id()) + 1
-            log = Log(id, LogType(0), row, datetime.now())
-            logger[shard].add_log(log)
         if primary[shard] == 1:
             print(" I am primary")
-            mod_data = {"shard": req["shard"], "data": req["data"]}
+            mod_data = {
+                "shard": req["shard"],
+                "data": req["data"],
+                "commit": commit[shard],
+            }
             secondary_servers = req["secondary_servers"]
             votes = 0
+            for row in data:
+                id = int(logger[shard].get_last_log_id()) + 1
+                log = Log(id, LogType(0), row, datetime.now())
+                logger[shard].add_log(log)
             for server in secondary_servers:
-                try:
-                    print("sent a reqest to server ", server)
-                    result = requests.post(
-                        f"http://{server}:8000/write", json=mod_data, timeout=15
-                    )
-                    print(result.json())
-                    if result.status_code != 200:
-                        return JSONResponse(
-                            status_code=400,
-                            content={
-                                "message": f"writes to server {server} failed",
-                                # "data entries written successfully":data_written,
-                                "status": "failure",
-                            },
+                while True:
+                    try:
+                        print("sent a reqest to server ", server)
+                        result = requests.post(
+                            f"http://{server}:8000/write", json=mod_data, timeout=15
                         )
-                    else:
-                        votes += 1
-                        print("got a vote")
-                    print(result.json())
-                except requests.RequestException as e:
-                    print(e)
-                    print(f"failed to write to {server}....")
-                    print("Continuing to write to other servers")
-                    continue
+                        print(result.json())
+                        if result.status_code != 200:
+                            print(f"write to server {server} failed")
+                        else:
+                            result = result.json()
+
+                            if (
+                                result["status"] == "failure"
+                                and result["message"] == "Does not have uptodate"
+                            ):
+                                curr_commit_index = result["last_commit"]
+                                logger[shard].get_requests_from_given_index(shard, int(curr_commit_index) + 1)
+                                list_to_update = logger[shard].get_requests_from_given_index(shard, int(commit_index) + 1)
+                                print(list_to_update)
+                                resp = requests.post(
+                                    f"http://{server}:8000/update_local_data",
+                                    json={"shards": shard,"data":list_to_update,"servers":server},
+                                )
+                                resp = resp.json()
+                                print(resp)
+
+                            else:
+                                votes += 1
+                                print("got a vote")
+                                break
+
+                                
+                    except requests.RequestException as e:
+                        print(e)
+                        print(f"failed to write to {server}....")
+                        print("Continuing to write to other servers")
+                        continue
             if 2 * votes >= len(secondary_servers):
                 print("got enough votes")
                 for row in data:
@@ -300,6 +360,18 @@ async def add_students_data(request: Request):
                 commit[shard] = logger[shard].get_last_log_id()
 
         else:
+            commit_index = req["commit"]
+            curr_commit_index = logger[shard].get_last_log_id()
+            if commit_index != curr_commit_index:
+                return {
+                    "message": "Does not have upto date",
+                    "last_commit": curr_commit_index,
+                    "status": "failure",
+                }
+            for row in data:
+                id = int(logger[shard].get_last_log_id()) + 1
+                log = Log(id, LogType(0), row, datetime.now())
+                logger[shard].add_log(log)
             print(" I am secondary")
             for row in data:
                 cursor.execute(
@@ -333,46 +405,67 @@ async def update_student_data(request: Request):
         stud_name = data["Stud_name"]
         stud_marks = data["Stud_marks"]
 
-        id = int(logger[shard].get_last_log_id()) + 1
-        log = Log(
-            id,
-            LogType(1),
-            {"shard": shard, "Stud_id": stud_id, "data": data},
-            datetime.now(),
-        )
-        logger[shard].add_log(log)
 
         if primary[shard] == 1:
             print(" I am primary")
             secondary_servers = req["secondary_servers"]
             votes = 0
-            mod_data = {"shard": shard, "Stud_id": stud_id, "data": data}
+            mod_data = {"shard": shard, "Stud_id": stud_id, "data": data,"commit": commit[shard]}
 
+            id = int(logger[shard].get_last_log_id()) + 1
+            log = Log(
+                id,
+                LogType(1),
+                {"shard": shard, "Stud_id": stud_id, "data": data},
+                datetime.now(),
+            )
+            logger[shard].add_log(log)
             for server in secondary_servers:
-                try:
-                    print("sent a reqest to server ", server)
-                    result = requests.put(
-                        f"http://{server}:8000/update", json=mod_data, timeout=15
-                    )
-                    print(result.json())
-                    if result.status_code != 200:
-                        return JSONResponse(
-                            status_code=400,
-                            content={
-                                "message": f"updates to server {server} failed",
-                                # "data entries written successfully":data_written,
-                                "status": "failure",
-                            },
+                while True:
+                    try:
+                        print("sent a reqest to server ", server)
+                        result = requests.put(
+                            f"http://{server}:8000/update", json=mod_data
                         )
-                    else:
-                        votes += 1
-                        print("got a vote")
-                    print(result.json())
-                except requests.RequestException as e:
-                    print(e)
-                    print(f"failed to update {server}....")
-                    print("Continuing to update in other servers")
-                    continue
+                        print(result.json())
+                        if result.status_code != 200:
+                            print(f"update to server {server} failed")
+
+                            # return JSONResponse(
+                            #     status_code=400,
+                            #     content={
+                            #         "message": f"updates to server {server} failed",
+                            #         # "data entries written successfully":data_written,
+                            #         "status": "failure",
+                            #     },
+                            # )
+                        else:
+                            result = result.json()
+
+                            if (
+                                result["status"] == "failure"
+                                and result["message"] == "Does not have uptodate"
+                            ):
+                                curr_commit_index = result["last_commit"]
+                                logger[shard].get_requests_from_given_index(shard, int(curr_commit_index) + 1)
+                                list_to_update = logger[shard].get_requests_from_given_index(shard, int(commit_index) + 1)
+                                print(list_to_update)
+                                resp = requests.post(
+                                    f"http://{server}:8000/update_local_data",
+                                    json={"shards": shard,"data":list_to_update,"servers":server},
+                                )
+                                resp = resp.json()
+                                print(resp)
+
+                            else:
+                                votes += 1
+                                print("got a vote")
+                                break
+                    except requests.RequestException as e:
+                        print(e)
+                        print(f"failed to update {server}....")
+                        print("Continuing to update in other servers")
+                        continue
             if 2 * votes >= len(secondary_servers):
                 print("got enough votes")
                 cursor.execute(
@@ -382,6 +475,22 @@ async def update_student_data(request: Request):
                 commit[shard] = logger[shard].get_last_log_id()
         else:
             print(" I am secondary")
+            commit_index = req["commit"]
+            curr_commit_index = logger[shard].get_last_log_id()
+            if commit_index != curr_commit_index:
+                return {
+                    "message": "Does not have upto date",
+                    "last_commit": curr_commit_index,
+                    "status": "failure",
+                }
+            id = int(logger[shard].get_last_log_id()) + 1
+            log = Log(
+                id,
+                LogType(1),
+                {"shard": shard, "Stud_id": stud_id, "data": data},
+                datetime.now(),
+            )
+            logger[shard].add_log(log)
             cursor.execute(
                 f"UPDATE {shard} SET Stud_name = ?, Stud_marks = ? WHERE Stud_id = ?",
                 (stud_name, stud_marks, stud_id),
@@ -411,46 +520,77 @@ async def delete_student_data(request: Request):
         shard = req["shard"]
         stud_id = req["Stud_id"]
 
-        id = int(logger[shard].get_last_log_id()) + 1
-        log = Log(id, LogType(2), {"Stud_id": stud_id}, datetime.now())
-        logger[shard].add_log(log)
+        
         if primary[shard] == 1:
             print(" I am primary")
             secondary_servers = req["secondary_servers"]
             votes = 0
-            mod_data = {"shard": req["shard"], "Stud_id": req["Stud_id"]}
-
+            mod_data = {"shard": req["shard"], "Stud_id": req["Stud_id"],"commit": commit[shard]}
+            id = int(logger[shard].get_last_log_id()) + 1
+            log = Log(id, LogType(2), {"Stud_id": stud_id}, datetime.now())
+            logger[shard].add_log(log)
             for server in secondary_servers:
-                try:
-                    print("sent a reqest to server ", server)
-                    result = requests.delete(
-                        f"http://{server}:8000/del", json=mod_data, timeout=15
-                    )
-                    print(result.json())
-                    if result.status_code != 200:
-                        return JSONResponse(
-                            status_code=400,
-                            content={
-                                "message": f"delete to server {server} failed",
-                                # "data entries written successfully":data_written,
-                                "status": "failure",
-                            },
+                while True:
+                    try:
+                        print("sent a reqest to server ", server)
+                        result = requests.delete(
+                            f"http://{server}:8000/del", json=mod_data, timeout=15
                         )
-                    else:
-                        votes += 1
-                        print("got a vote")
-                    print(result.json())
-                except requests.RequestException as e:
-                    print(e)
-                    print(f"failed to delete {server}....")
-                    print("Continuing to delete in other servers")
-                    continue
+                        print(result.json())
+                        if result.status_code != 200:
+                            print(f"delete to server {server} failed")
+                            # return JSONResponse(
+                            #     status_code=400,
+                            #     content={
+                            #         "message": f"delete to server {server} failed",
+                            #         # "data entries written successfully":data_written,
+                            #         "status": "failure",
+                            #     },
+                            # )
+                        else:
+                            result = result.json()
+
+                            if (
+                                result["status"] == "failure"
+                                and result["message"] == "Does not have uptodate"
+                            ):
+                                curr_commit_index = result["last_commit"]
+                                logger[shard].get_requests_from_given_index(shard, int(curr_commit_index) + 1)
+                                list_to_update = logger[shard].get_requests_from_given_index(shard, int(commit_index) + 1)
+                                print(list_to_update)
+                                resp = requests.post(
+                                    f"http://{server}:8000/update_local_data",
+                                    json={"shards": shard,"data":list_to_update,"servers":server},
+                                )
+                                resp = resp.json()
+                                print(resp)
+
+                            else:
+                                votes += 1
+                                print("got a vote")
+                                break
+                    except requests.RequestException as e:
+                        print(e)
+                        print(f"failed to delete {server}....")
+                        print("Continuing to delete in other servers")
+                        continue
             if 2 * votes >= len(secondary_servers):
                 print("got enough votes")
                 cursor.execute(f"DELETE FROM {shard} WHERE Stud_id = ?", (stud_id,))
                 commit[shard] = logger[shard].get_last_log_id()
         else:
+            commit_index = req["commit"]
+            curr_commit_index = logger[shard].get_last_log_id()
+            if commit_index != curr_commit_index:
+                return {
+                    "message": "Does not have upto date",
+                    "last_commit": curr_commit_index,
+                    "status": "failure",
+                }
             print(" I am secondary")
+            id = int(logger[shard].get_last_log_id()) + 1
+            log = Log(id, LogType(2), {"Stud_id": stud_id}, datetime.now())
+            logger[shard].add_log(log)
             cursor.execute(f"DELETE FROM {shard} WHERE Stud_id = ?", (stud_id,))
             commit[shard] = logger[shard].get_last_log_id()
 
