@@ -51,11 +51,22 @@ def write(req: Any=Body(...)):
             
             with app.locks[shard_id]:
                 queries = [{"Stud_id":stud[0],"Stud_name":stud[1],"Stud_marks":stud[2]} for stud in shards[shard_id]["students"]]
-                data= { "shard":shard_id,"curr_idx":shards[shard_id]["attr"][3] ,"data":queries}
+                data= { "shard":shard_id,"data":queries,"secondary_servers":[]}
                 curr_idx = None
-                for server in shards[shard_id]["server"]:
-                    print(f"Sending request to {server} :{shard_id}")
-                    result = requests.post(f"http://{server}:8000/write",json=data,timeout=15)
+                mysql_cursor.execute("SELECT Server_id,Primary_ FROM MapT WHERE Shard_id=%s",(shard_id,))
+                rows = mysql_cursor.fetchall()
+                PRIMARY_SERVER = None
+                for row in rows:
+                    server_id ,primary = row
+                    if primary:
+                        PRIMARY_SERVER = server_id
+                    else:
+                        data["secondary_servers"].append(server_id)
+                print(f"Sending request to primary server: {PRIMARY_SERVER} :{shard_id}") 
+
+                try:
+                    print(data)
+                    result = requests.post(f"http://{PRIMARY_SERVER}:8000/write",json=data,timeout=15)
                     if result.status_code != 200:
                         return JSONResponse(status_code=400,content={
                             "message":f"writes to shard {shard_id} failed",
@@ -63,10 +74,11 @@ def write(req: Any=Body(...)):
                             "status":"failure"
                         })
                     print(result.json())
-                    curr_idx = result.json()["current_idx"]
-                shards[shard_id]["attr"][3]=curr_idx
-                mysql_cursor.execute("UPDATE ShardT SET valid_idx= %s WHERE Stud_id_low = %s AND Shard_id = %s",(curr_idx,shards[shard_id]["attr"][0],shard_id))
-                mysql_conn.commit()
+                except requests.RequestException as e:
+                    print(e)
+                    print(f"failed to write to {shard_id}....")
+                    print("Continuing to write to other shards")
+                    continue
                 data_written.extend(queries)
         return {"message":f"{len(students)} Data entries added","status":"success"}
         

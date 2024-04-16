@@ -1,24 +1,27 @@
-from crash_handler import check_server_health
+from crash_handler import check_server_health,elect_primary
 from fastapi import FastAPI, Request, HTTPException
 from threading import Thread
-from globals import app
+from globals import app,appLock
 # app = FastAPI()
 
 @app.post("/sync_app")
 async def sync_app(request: Request):
     try:
-        req = await request.json()
-        # app.hash_dict = req["hash_dict"]
-        # app.server_list = req["server_list"]
-
-        app.hash_dict = req["hash_dict"]
-        app.server_list = req["server_list"]
-        app.locks = req["locks"]
-
-        return {
-            "message": "Successfully updated",
-            "status": "success"
-        }
+        with appLock:
+            req = await request.json()
+            # need to update app.hash_dict  
+            app.server_list = req["server_list"]
+            if "schema" in req:
+                app.schema = req["schema"]
+            print(app.server_list)
+            print('sync app server is calling elect primary')
+            print('-------------------------------------------')
+            print('-------------------------------------------')
+            elect_primary()
+            return {
+                "message": "Successfully updated",
+                "status": "success"
+            }
         
     except Exception as e:
         print("error in update the app datastructure: ", e)

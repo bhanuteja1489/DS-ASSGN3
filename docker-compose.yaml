@@ -6,6 +6,8 @@ services:
     container_name: metadb
     env_file:
       - ./metadb.env
+    ports:
+      - "30000:3306"
     networks:
       - mynet
     volumes:

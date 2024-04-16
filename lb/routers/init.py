@@ -48,7 +48,8 @@ def init_system(req: Any=Body(...)):
         create_mapt_query = f"""
         CREATE TABLE IF NOT EXISTS MapT (
             Shard_id VARCHAR(255),
-            Server_id VARCHAR(255)
+            Server_id VARCHAR(255),
+            Primary_ int default 0
         )
         """
         mysql_cursor.execute(create_mapt_query)
@@ -100,7 +101,7 @@ def init_system(req: Any=Body(...)):
                 app.hash_dict[sh].add_server(app.server_list[server_name]['index'], ip[server_name], 8000)
                 
                 ## add shard-server mapping to database
-                add_mapt_query = "INSERT INTO MapT VALUES (%s, %s)"
+                add_mapt_query = "INSERT INTO MapT VALUES (%s, %s,0)"
                 print(add_mapt_query)
                 try:
                     mysql_cursor.execute(add_mapt_query,(sh,server_name))
@@ -131,9 +132,7 @@ def init_system(req: Any=Body(...)):
         print("servers:")
         print(app.server_list.keys())
         requests.post("http://shard_manager:8000/sync_app",json={
-             "hash_dict":app.hash_dict,
              "server_list":app.server_list,
-             "locks":app.locks
         })
         release_write()
 

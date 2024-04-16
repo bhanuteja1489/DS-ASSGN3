@@ -26,28 +26,34 @@ def delete_entry(req: Any = Body(...)):
 
 
         #get all servers that contain the shard
-
-            mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id = %s",(shard_id,))
-            servers = mysql_cursor.fetchall()
-            print(servers)
-            if servers:
-                for server in servers:
-                    server = server[0]
-                    payload = {
+            data = {
                         "shard":shard_id,
                         "Stud_id":Stud_id,
+                        "secondary_servers":[]
                     }
-                    result = requests.delete(f"http://{server}:8000/del",json=payload,timeout=15)
-                    
-                    if not result.ok:
-                        raise HTTPException(status_code=500,detail="Internal error")
+            mysql_cursor.execute("SELECT Server_id,Primary_ FROM MapT WHERE Shard_id=%s",(shard_id,))
+            rows = mysql_cursor.fetchall()
+            PRIMARY_SERVER = None
+            for row in rows:
+                server_id ,primary = row
+                if primary:
+                    PRIMARY_SERVER = server_id
+                else:
+                    data["secondary_servers"].append(server_id)
+            
+            if PRIMARY_SERVER:
+                result = requests.delete(f"http://{PRIMARY_SERVER}:8000/del",json=data,timeout=15)
                 
-                return {
-                    "message": f"Data entry for Stud_id:{Stud_id} deleted",
-                    "status" : "success"
-                }
+                if not result.ok:
+                    raise HTTPException(status_code=500,detail="Internal error")
+            
+            return {
+                "message": f"Data entry for Stud_id:{Stud_id} deleted",
+                "status" : "success"
+            }
             
     except Exception as e:
+        print(e)
         raise HTTPException(status_code=500,detail="Internal error1")
     finally:
         close_db(mysql_conn,mysql_cursor)

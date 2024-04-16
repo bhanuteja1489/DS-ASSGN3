@@ -1,5 +1,11 @@
 # Distributed Systems Assignment 2
 
+<!-- ![System Diagram](./shardedDbSystemDiagram.png)
+ -->
+ <p align="center">
+  <img src="./shardedDbSystemDiagram.png" alt="Description of the image">
+</p>
+
 ## Server
 
 - The server containers handle 2 different shards (one replica each) 

@@ -38,50 +38,15 @@ VIR_SERVERS = 9
 
 
 # maps for storing locally for loadbalancer
-app.locks = {}
-app.hash_dict = {}
 app.server_list = {}
 app.schema = None
 
 
-# locks and semaphores for handling concurrency
+# lock for app datastructure
 
-app.read_write_lock_dict = {}
-app.read_semaphore_dict = {}
+appLock = threading.Lock()
 
-READ_LOCK = threading.Lock()
-WRITE_LOCK = threading.Lock()
-READER_COUNT = 0
 
-def acquire_read(): 
-    READ_LOCK.acquire()
-    global READER_COUNT
-    READER_COUNT += 1
-    if READER_COUNT == 1:
-        WRITE_LOCK.acquire()
-    READ_LOCK.release()
-    caller_name = inspect.stack()[1].function
-    print(f"acquired read lock, called by {caller_name}")
-
-def release_read():
-    READ_LOCK.acquire()
-    global READER_COUNT
-    READER_COUNT -= 1
-    if READER_COUNT == 0:
-        WRITE_LOCK.release()
-    READ_LOCK.release()
-    caller_name = inspect.stack()[1].function
-    print(f"released read lock, called by {caller_name}")
-
-def acquire_write():
-    WRITE_LOCK.acquire()
-    caller_name = inspect.stack()[1].function
-    print(f"acquired write lock, called by {caller_name}")
-
-def release_write():
-    WRITE_LOCK.release()
-    caller_name = inspect.stack()[1].function
-    print(f"released write lock, called by {caller_name}")
 
 def get_db(db_engine = "sql"):
     if db_engine == "sqlite":

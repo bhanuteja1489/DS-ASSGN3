@@ -11,9 +11,13 @@ async def sync_app(request: Request):
         # app.hash_dict = req["hash_dict"]
         # app.server_list = req["server_list"]
 
-        app.hash_dict = req["hash_dict"]
         app.server_list = req["server_list"]
-        app.locks = req["locks"]
+        to_remove = req["to_remove"]
+        to_add = req["to_add"]
+        for x in to_remove:
+            app.hash_dict[x[0]].remove_server(x[1])
+        for x in to_add:
+            app.hash_dict[x[0]].add_server(x[1], x[2], x[3])
         return {
             "message": "Successfully updated",
             "status": "success"
