@@ -1,0 +1,227 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "test_server",
+    "dateExported": "2024-04-24T16:13:53.464Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "e03e125f-8702-4ba0-b382-18a137b580f2",
+            "colId": "d313cbe9-cdfa-4f09-b3e3-2a39014bf4ee",
+            "containerId": "",
+            "name": "config",
+            "url": "http://localhost:5000/config",
+            "method": "POST",
+            "sortNum": 5000,
+            "created": "2024-02-11T15:42:34.477Z",
+            "modified": "2024-04-24T07:14:03.614Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"schema\":{\"columns\":[\"Stud_id\",\"Stud_name\",\"Stud_marks\"],\n  \"dtypes\":[\"Number\",\"String\",\"Number\"]},\n  \"shards\":[\"sh1\",\"sh2\"]\n}",
+                "form": []
+            },
+            "tests": [],
+            "postReq": {
+                "inlineScripts": [
+                    {
+                        "script": [
+                            "tests[\"Response status code is 200\"] = responseCode.code === 200;",
+                            ""
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "_id": "817b0351-6ce5-48f5-89e2-d6b612ed9ad9",
+            "colId": "d313cbe9-cdfa-4f09-b3e3-2a39014bf4ee",
+            "containerId": "",
+            "name": "write",
+            "url": "http://localhost:8000/write",
+            "method": "POST",
+            "sortNum": 7500,
+            "created": "2024-02-11T14:44:56.369Z",
+            "modified": "2024-03-06T18:38:29.268Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"shard\": \"sh1\",\n  \"curr_idx\": 507,\n  \"data\": [\n    {\n      \"Stud_id\": 2257,\n      \"Stud_name\": \"GHaddddddddddddI\",\n      \"Stud_marks\": 27\n    },\n    {\n      \"Stud_id\": 2258,\n      \"Stud_name\": \"GpdddddaaaaaaaaaaHI\",\n      \"Stud_marks\": 37\n    }\n  ]\n}",
+                "form": []
+            },
+            "tests": [
+                {
+                    "type": "json-query",
+                    "custom": "",
+                    "action": "equal",
+                    "value": "{ \"message\": \"Data entries added\", \"current_idx\": 508, \"status\": \"success\" }"
+                }
+            ]
+        },
+        {
+            "_id": "3cf20f0b-c4c8-4972-9a81-081790756d60",
+            "colId": "d313cbe9-cdfa-4f09-b3e3-2a39014bf4ee",
+            "containerId": "",
+            "name": "update",
+            "url": "http://localhost:8000/update",
+            "method": "PUT",
+            "sortNum": 10000,
+            "created": "2024-02-11T14:30:58.620Z",
+            "modified": "2024-03-07T18:05:40.793Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n\"shard\":\"sh2\",\n\"Stud_id\":17,\n\"data\": {\"Stud_id\":17,\"Stud_name\":\"kevin\",\"Stud_marks\":288}\n}",
+                "form": []
+            },
+            "tests": [
+                {
+                    "type": "json-query",
+                    "custom": "json",
+                    "action": "equal",
+                    "value": "{ \"message\": \"Data entry for Stud_id:17 updated\", \"status\": \"success\" }"
+                },
+                {
+                    "type": "res-code",
+                    "custom": "",
+                    "action": "equal",
+                    "value": "200"
+                }
+            ]
+        },
+        {
+            "_id": "17deda41-598d-4bd6-adab-ed5aa98f1b76",
+            "colId": "d313cbe9-cdfa-4f09-b3e3-2a39014bf4ee",
+            "containerId": "",
+            "name": "read",
+            "url": "http://localhost:8000/read",
+            "method": "POST",
+            "sortNum": 20000,
+            "created": "2024-02-11T14:50:34.503Z",
+            "modified": "2024-03-07T10:18:09.821Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n\"shard\":\"sh1\",\n\"Stud_id\":{\"low\":2235, \"high\":2555}\n}",
+                "form": []
+            },
+            "tests": [
+                {
+                    "type": "json-query",
+                    "custom": "json",
+                    "action": "equal",
+                    "value": "{ \"data\": [ { \"Stud_id\": 2255, \"Stud_name\": \"GHI\", \"Stud_marks\": \"27\" } ], \"status\": \"success\" }"
+                },
+                {
+                    "type": "res-code",
+                    "custom": "",
+                    "action": "equal",
+                    "value": "200"
+                }
+            ]
+        },
+        {
+            "_id": "33fff446-c33a-4f63-8298-8d2038307e2d",
+            "colId": "d313cbe9-cdfa-4f09-b3e3-2a39014bf4ee",
+            "containerId": "",
+            "name": "copy",
+            "url": "http://localhost:8000/copy",
+            "method": "GET",
+            "sortNum": 30000,
+            "created": "2024-02-11T15:29:42.013Z",
+            "modified": "2024-03-06T18:39:05.631Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"shards\":[\"sh1\",\"sh2\"]\n}",
+                "form": []
+            },
+            "tests": [
+                {
+                    "type": "json-query",
+                    "custom": "json",
+                    "action": "equal",
+                    "value": "{ \"sh1\": [], \"sh2\": [ { \"Stud_id\": 2255, \"Stud_name\": \"GHI\", \"Stud_marks\": \"27\" } ], \"status\": \"success\" }"
+                },
+                {
+                    "type": "res-code",
+                    "custom": "",
+                    "action": "equal",
+                    "value": "200"
+                }
+            ]
+        },
+        {
+            "_id": "f534bf8d-6b5c-405e-ae88-bcfd2e5e0f11",
+            "colId": "d313cbe9-cdfa-4f09-b3e3-2a39014bf4ee",
+            "containerId": "",
+            "name": "heartbeat",
+            "url": "http://localhost:8000/heartbeat",
+            "method": "GET",
+            "sortNum": 40000,
+            "created": "2024-02-11T15:34:17.093Z",
+            "modified": "2024-03-13T11:19:46.349Z",
+            "headers": [],
+            "params": [],
+            "tests": [
+                {
+                    "type": "json-query",
+                    "custom": "json",
+                    "action": "equal",
+                    "value": "{}"
+                },
+                {
+                    "type": "res-code",
+                    "custom": "",
+                    "action": "equal",
+                    "value": "200"
+                }
+            ]
+        },
+        {
+            "_id": "b17bbd55-94c1-4b6e-87ca-528f7ce290d8",
+            "colId": "d313cbe9-cdfa-4f09-b3e3-2a39014bf4ee",
+            "containerId": "",
+            "name": "delete",
+            "url": "http://localhost:8000/del",
+            "method": "DELETE",
+            "sortNum": 60000,
+            "created": "2024-02-11T15:45:10.451Z",
+            "modified": "2024-03-10T09:23:30.652Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"shard\":\"sh1\",\n  \"Stud_id\":\"2257\"\n}",
+                "form": []
+            },
+            "tests": [
+                {
+                    "type": "json-query",
+                    "custom": "json",
+                    "action": "equal",
+                    "value": "{ \"message\": \"Data entry with Stud_id: 18 removed\", \"status\": \"success\" }"
+                },
+                {
+                    "type": "res-code",
+                    "custom": "",
+                    "action": "equal",
+                    "value": "200"
+                }
+            ]
+        }
+    ],
+    "settings": {
+        "runOptions": {
+            "delay": 0,
+            "iterations": 1,
+            "stopOnFail": true,
+            "dataFilePath": ""
+        }
+    }
+}

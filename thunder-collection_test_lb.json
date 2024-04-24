@@ -1,0 +1,156 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "test_lb",
+    "dateExported": "2024-04-24T16:14:22.058Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "3672f9b8-60bd-4472-83b3-fe47f2780ff6",
+            "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
+            "containerId": "",
+            "name": "init",
+            "url": "http://localhost:8000/init",
+            "method": "POST",
+            "sortNum": 10000,
+            "created": "2024-03-11T14:08:07.234Z",
+            "modified": "2024-04-24T08:28:40.592Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"N\": 3,\n  \"schema\": {\n    \"columns\": [\n      \"Stud_id\",\n      \"Stud_name\",\n      \"Stud_marks\"\n    ],\n    \"dtypes\": [\n      \"Number\",\n      \"String\",\n      \"String\"\n    ]\n  },\n  \"shards\": [\n    {\n      \"Stud_id_low\": 0,\n      \"Shard_id\": \"sh1\",\n      \"Shard_size\": 4096\n    },\n    {\n      \"Stud_id_low\": 4096,\n      \"Shard_id\": \"sh2\",\n      \"Shard_size\": 4096\n    },\n    {\n      \"Stud_id_low\": 8192,\n      \"Shard_id\": \"sh3\",\n      \"Shard_size\": 4096\n    }\n  ],\n  \"servers\": {\n    \"Server0\": [\n      \"sh1\",\n      \"sh2\"\n    ],\n    \"Server1\": [\n      \"sh2\",\n      \"sh3\"\n    ],\n    \"Server2\": [\n      \"sh1\",\n      \"sh3\"\n    ]\n  }\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "5c8baf89-e828-4961-9274-a412560e9c7b",
+            "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
+            "containerId": "",
+            "name": "add_servers",
+            "url": "http://localhost:5000/add",
+            "method": "POST",
+            "sortNum": 35000,
+            "created": "2024-03-12T20:27:22.188Z",
+            "modified": "2024-04-23T15:48:24.161Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"n\": 2,\n  \"new_shards\": [\n    {\n      \"Stud_id_low\": 12288,\n      \"Shard_id\": \"sh5\",\n      \"Shard_size\": 4096\n    }\n  ],\n  \"servers\": {\n    \"Server4\": [\n      \"sh3\",\n      \"sh5\"\n    ],\n    \"Server5\": [\n      \"sh2\",\n      \"sh5\"\n    ]\n  }\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "a1fe136c-eebe-41cb-a4fb-01fdaba5f414",
+            "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
+            "containerId": "",
+            "name": "write",
+            "url": "http://localhost:5000/write",
+            "method": "POST",
+            "sortNum": 40000,
+            "created": "2024-03-13T17:08:14.408Z",
+            "modified": "2024-04-23T15:48:43.321Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"data\": [\n    {\n      \"Stud_id\": 2257,\n      \"Stud_name\": \"sh1\",\n      \"Stud_marks\": 27\n    },\n    {\n      \"Stud_id\": 4000,\n      \"Stud_name\": \"sh2\",\n      \"Stud_marks\": 27\n    },\n    {\n      \"Stud_id\": 12001,\n      \"Stud_name\": \"sh3\",\n      \"Stud_marks\": 27\n    }\n  ]\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "2b8d2132-06ef-4757-8ca6-d602d1740941",
+            "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
+            "containerId": "",
+            "name": "rm",
+            "url": "http://localhost:5000/rm",
+            "method": "DELETE",
+            "sortNum": 50000,
+            "created": "2024-03-11T22:39:47.581Z",
+            "modified": "2024-04-23T16:30:47.825Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"n\":1,\n  \"servers\":[\"Server1\"]\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "aeab2f91-8edb-4f9e-9cde-e119193d5329",
+            "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
+            "containerId": "",
+            "name": "update",
+            "url": "http://localhost:8000/update",
+            "method": "PUT",
+            "sortNum": 60000,
+            "created": "2024-03-14T13:46:49.745Z",
+            "modified": "2024-03-22T09:03:03.351Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"Stud_id\": 2257,\n  \"data\": {\n    \"Stud_id\": 2257,\n    \"Stud_name\": \"pspk\",\n    \"Stud_marks\": 30\n  }\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "b1b80e60-8cf2-483b-b828-d6d70ac2a86d",
+            "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
+            "containerId": "",
+            "name": "status",
+            "url": "http://localhost:5000/status",
+            "method": "GET",
+            "sortNum": 70000,
+            "created": "2024-03-14T14:35:59.150Z",
+            "modified": "2024-04-23T15:48:33.886Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "e205caa3-2ab3-4e11-a57e-c98871dca97c",
+            "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
+            "containerId": "",
+            "name": "read",
+            "url": "http://localhost:5000/read",
+            "method": "POST",
+            "sortNum": 80000,
+            "created": "2024-03-14T14:36:23.052Z",
+            "modified": "2024-04-23T15:48:58.242Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"Stud_id\": {\n    \"low\": 0,\n    \"high\": 90000\n  }\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "f40bd6f9-682b-4244-b855-000711c66f8e",
+            "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
+            "containerId": "",
+            "name": "delete",
+            "url": "http://localhost:8000/del",
+            "method": "DELETE",
+            "sortNum": 90000,
+            "created": "2024-03-16T12:26:18.011Z",
+            "modified": "2024-03-21T11:44:04.418Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"Stud_id\":2256\n}",
+                "form": []
+            },
+            "tests": []
+        }
+    ]
+}
