@@ -84,8 +84,23 @@ Remove all containers
 
 1. In the default configuration, time taken for 10,000 write requests is `559.99 seconds` and time taken for 10,000 read requests is `75.85 seconds`.
 
-2. After increasing the number of shard replicas to 7, the time taken for 10,000 write requests is `1414.35 seconds` and time taken for 10,000 read requests is `64.96 seconds`.
+2. After increasing the number of shard replicas to 7, the time taken for 10,000 write requests is `397.35 seconds` and time taken for 10,000 read requests is `55.96 seconds`.
 
-3. After increasing the number of servers to 10 and increasing the number of shards to 6 and replicas to 8, the time taken for 10,000 write requests is `3200 seconds` and time taken for 10,000 read requests is `75.85 seconds`
+3. After increasing the number of servers to 10 and increasing the number of shards to 6 and replicas to 8, the time taken for 10,000 write requests is `1768 seconds` and time taken for 10,000 read requests is `61.14 seconds`
 
 4. All the endpoints are tested and everything is working perfectly fine. After dropping a server container the load balancer is successfully spawns a new container and copies the shard entries present in other replicas.
+
+
+# Design Choice
+
+We used Passive Replication
+
+One primary is selected and it sends all write requests to other servers
+Secondary servers updates their data once they get request from primary and send an ack to the primary
+Once primary gets enough votes it updates data locally and commits the data
+If secondary crashes then the shard manager respawns a new server. It gets the data from the primary.
+If primary crashes then shard manager along with respawning new server, starts leader election. It gets the data from the newly elected leader. 
+
+### Leader Election
+All the servers send their latest commit log index to the shard manager. 
+Shard manager selects one with highest commit index or any one of the server if there are multiple servers with same log maximum commited log index.
