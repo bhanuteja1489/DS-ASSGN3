@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 import sqlite3
 import time
 import sys
-
 from fastapi.responses import JSONResponse
 import requests
 
@@ -391,7 +390,7 @@ async def add_students_data(request: Request):
         raise HTTPException(status_code=500, detail=f"An error occurred: {err}")
 
     except Exception as e:
-        print(str(e))
+        print(f"Exception type: {type(e)}, Exception: {e}")
         raise HTTPException(status_code=400, detail="Invalid request")
 
 
