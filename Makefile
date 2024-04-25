@@ -1,3 +1,4 @@
+SERVER_NAME:=Server0
 start:
 	make clean
 	docker-compose up -d metadb
@@ -17,8 +18,11 @@ clean_servers:
 remove_images:
 	-docker rmi -f serverimg lb
 
-connect_db:
-	mysql --host localhost -u kayden -P 30000 -pkayden@123
+view_metadb:
+	@docker exec -it metadb mysql -u kayden -pkayden@123 --database=metadb -e "select * from MapT;select * from ShardT;"
+
+view_logfile:
+	@docker exec -it $(SERVER_NAME) sh -c "cd logs;sh"
 # to get logs of any container use:      docker logs -f CONTAINER_ID OR NAME
 # mysql --host localhost -u kayden -P 30000 -pkayden@123 to check database
 # use metadb;select * from MapT;
