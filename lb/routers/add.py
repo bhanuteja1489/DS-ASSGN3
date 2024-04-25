@@ -79,34 +79,44 @@ def add_servers(req: Any = Body(...)):
                     new_shardids = [shard_info["Shard_id"] for shard_info in new_shards]
                     print(new_shardids)
                     if sh not in new_shardids:
-                            mysql_cursor.execute("SELECT DISTINCT Server_id FROM MapT WHERE Shard_id=%s",(sh,))
-                            sh_servers = mysql_cursor.fetchall()
+                            mysql_cursor.execute("SELECT Server_id FROM MapT WHERE Shard_id=%s AND Primary_=1",(sh,))
+                            sh_servers = mysql_cursor.fetchone()
                             sh_students = []
-                            for sh_server in sh_servers:
-                                if sh_server[0] != server_name:
+                            print(sh_servers)
+                            if sh_servers:
+                                sh_server = sh_servers
+                                print(f"fetching shard {sh} from its primary server {sh_server}")
+                                if sh_server[0]!= server_name:
                                     try:
+                                        
                                         resp = requests.get(f"http://{app.server_list[sh_server[0]]['ip']}:8000/copy",json={
-                                        "shards": [sh]},timeout=15)
+                                        "shards": [sh]},timeout=40)
                                         sh_students = resp.json()[sh]
-                                        break
+                                        # break
                                     except requests.RequestException as e:
                                         print(e)
-                                        print(f"couldn't copy {sh} from {sh_server[0]},trying another server")
+                                        print(f"Exception type: {type(e)}, Exception: {e}")
+                                        print(f"couldn't copy {sh} from {sh_server[0]},trying again")
                             
                             print(f"=== Student List for {sh} ===")
                             print(sh_students)
                             print("====================")
 
                                 # copy the shard data to the newly added server 
-                            requests.post(f"http://{app.server_list[server_name]['ip']}:8000/write",json={
+                            rsp=requests.post(f"http://{app.server_list[server_name]['ip']}:8000/write",json={
                                 "shard":sh,
                                 "curr_idx": 0, 
                                 "data": sh_students
                             },timeout=15)
+                            print(rsp.json())
                             print(f"Successfully copied shard:{sh} data from ", sh_server[0]," to ", server_name)   
                                 
         # adding entries in ShardT
+        print("new_shards----------------------")
+        print(new_shards)
         for shard in new_shards:
+            
+            print(f"Inserting shard {shard} into ShardT")
             shard_query ="INSERT INTO ShardT VALUES (%s,%s,%s,%s)"
             mysql_cursor.execute(shard_query,(shard["Stud_id_low"],shard["Shard_id"],shard["Shard_size"],shard["Stud_id_low"]))
             mysql_conn.commit()
@@ -117,8 +127,16 @@ def add_servers(req: Any = Body(...)):
             "status": "success"
         }
     except Exception as e:
+         print(e)
+         print(f"Exception type: {type(e)}, Exception: {e}")
+
          return "some error"
     finally:
         close_db(mysql_conn,mysql_cursor)
+        print("servers:")
+        print(app.server_list.keys())
+        requests.post("http://shard_manager:8000/sync_app",json={
+             "server_list":app.server_list,
+        })
         release_write()
         
