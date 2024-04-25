@@ -1,7 +1,7 @@
 {
     "client": "Thunder Client",
     "collectionName": "test_lb",
-    "dateExported": "2024-04-24T16:14:22.058Z",
+    "dateExported": "2024-04-25T13:19:25.427Z",
     "version": "1.1",
     "folders": [],
     "requests": [
@@ -14,7 +14,7 @@
             "method": "POST",
             "sortNum": 10000,
             "created": "2024-03-11T14:08:07.234Z",
-            "modified": "2024-04-24T08:28:40.592Z",
+            "modified": "2024-04-25T13:18:36.891Z",
             "headers": [],
             "params": [],
             "body": {
@@ -29,11 +29,11 @@
             "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
             "containerId": "",
             "name": "add_servers",
-            "url": "http://localhost:5000/add",
+            "url": "http://localhost:8000/add",
             "method": "POST",
             "sortNum": 35000,
             "created": "2024-03-12T20:27:22.188Z",
-            "modified": "2024-04-23T15:48:24.161Z",
+            "modified": "2024-04-25T13:18:44.143Z",
             "headers": [],
             "params": [],
             "body": {
@@ -48,11 +48,11 @@
             "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
             "containerId": "",
             "name": "write",
-            "url": "http://localhost:5000/write",
+            "url": "http://localhost:8000/write",
             "method": "POST",
             "sortNum": 40000,
             "created": "2024-03-13T17:08:14.408Z",
-            "modified": "2024-04-23T15:48:43.321Z",
+            "modified": "2024-04-25T13:18:49.804Z",
             "headers": [],
             "params": [],
             "body": {
@@ -67,11 +67,11 @@
             "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
             "containerId": "",
             "name": "rm",
-            "url": "http://localhost:5000/rm",
+            "url": "http://localhost:8000/rm",
             "method": "DELETE",
             "sortNum": 50000,
             "created": "2024-03-11T22:39:47.581Z",
-            "modified": "2024-04-23T16:30:47.825Z",
+            "modified": "2024-04-25T13:18:55.250Z",
             "headers": [],
             "params": [],
             "body": {
@@ -90,7 +90,7 @@
             "method": "PUT",
             "sortNum": 60000,
             "created": "2024-03-14T13:46:49.745Z",
-            "modified": "2024-03-22T09:03:03.351Z",
+            "modified": "2024-04-25T13:19:01.213Z",
             "headers": [],
             "params": [],
             "body": {
@@ -105,11 +105,11 @@
             "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
             "containerId": "",
             "name": "status",
-            "url": "http://localhost:5000/status",
+            "url": "http://localhost:8000/status",
             "method": "GET",
             "sortNum": 70000,
             "created": "2024-03-14T14:35:59.150Z",
-            "modified": "2024-04-23T15:48:33.886Z",
+            "modified": "2024-04-25T13:19:07.554Z",
             "headers": [],
             "params": [],
             "tests": []
@@ -119,11 +119,11 @@
             "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
             "containerId": "",
             "name": "read",
-            "url": "http://localhost:5000/read",
+            "url": "http://localhost:8000/read",
             "method": "POST",
             "sortNum": 80000,
             "created": "2024-03-14T14:36:23.052Z",
-            "modified": "2024-04-23T15:48:58.242Z",
+            "modified": "2024-04-25T13:19:13.911Z",
             "headers": [],
             "params": [],
             "body": {
@@ -138,19 +138,22 @@
             "colId": "6e517367-de16-4ea9-ad18-550606b5f736",
             "containerId": "",
             "name": "delete",
-            "url": "http://localhost:8000/del",
+            "url": "http://localhost:8000/delz",
             "method": "DELETE",
             "sortNum": 90000,
             "created": "2024-03-16T12:26:18.011Z",
-            "modified": "2024-03-21T11:44:04.418Z",
+            "modified": "2024-04-25T13:19:19.307Z",
             "headers": [],
             "params": [],
             "body": {
                 "type": "json",
-                "raw": "{\n  \"Stud_id\":2256\n}",
+                "raw": "{\n  \"Stud_id\":2257\n}",
                 "form": []
             },
             "tests": []
         }
-    ]
+    ],
+    "settings": {
+        "envId": "4fdaefd1-5cf8-459b-be3f-7ce8f98c7b43"
+    }
 }
