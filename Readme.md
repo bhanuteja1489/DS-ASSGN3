@@ -1,10 +1,16 @@
-# Distributed Systems Assignment 3
+# Distributed Systems Assignment 3:<br>Implementing Write-Ahead Logging for Consistency in Replicated Database with Sharding
+ ## Overview
 
+This assignment involves implementing a sharded database that stores a single table (StudT) across multiple shards distributed across several server containers. Each shard can be replicated across multiple server containers to enable parallel read capabilities. The focus of this assignment is to implement a Write-Ahead Logging (WAL) mechanism for maintaining consistency among the replicas of the shards distributed among various servers.
 <!-- ![System Diagram](./shardedDbSystemDiagram.png)
  -->
  <p align="center">
   <img src="./shardedDbSystemDiagram.png" alt="Description of the image">
 </p>
+
+ ## System Requirements
+ - OS: Ubuntu 20.04 LTS or above
+ - Docker: Version 20.10.23 or above
 
 ## Server
 
