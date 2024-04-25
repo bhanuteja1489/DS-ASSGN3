@@ -12,21 +12,23 @@ if os.path.exists(DB_FILE):
 # mysql_conn = sqlite3.connect('example.db', check_same_thread=False)
 # mysql_cursor = mysql_conn.cursor()
 
-# while True:
-#     try:
-#         mysql_conn = conn.connect(
-#             host="metadb",
-#             user=os.getenv("MYSQL_USER", "bhanu"),
-#             password=os.getenv("MYSQL_PASSWORD", "bhanu@1489"),
-#             database=os.getenv("MYSQL_DATABASE", "StudentDB"),
-#         )
-#         print("connected")
-#         break
+while True:
+    try:
+        mysql_conn = conn.connect(
+            host="metadb",
+            user=os.getenv("MYSQL_USER", "bhanu"),
+            password=os.getenv("MYSQL_PASSWORD", "bhanu@1489"),
+            database=os.getenv("MYSQL_DATABASE", "StudentDB"),
+        )
+        print("connected")
+        mysql_conn.close()
+        break
     
-#     except Exception as e:
-#         # print(e)
-#         time.sleep(0.02)
+    except Exception as e:
+        # print(e)
+        time.sleep(0.02)
 # mysql_cursor = mysql_conn.cursor()
+
 
 app = FastAPI()
 
