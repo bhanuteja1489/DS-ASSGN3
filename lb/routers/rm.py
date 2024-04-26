@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, HTTPException,Body
 from fastapi.responses import JSONResponse
 from requests import RequestException
 from docker import errors
+import requests
 from typing import Any
 from helpers import remove_servers
 from globals import *
@@ -111,4 +112,9 @@ def rm_servers(req: Any=Body(...)):
         return JSONResponse(status_code=500, content={"message": "Unexpected error", "status": "failure"})
     finally:
         close_db(mysql_conn,mysql_cursor)
+        print("servers:")
+        print(app.server_list.keys())
+        requests.post("http://shard_manager:8000/sync_app",json={
+             "server_list":app.server_list,
+        })
         release_write()

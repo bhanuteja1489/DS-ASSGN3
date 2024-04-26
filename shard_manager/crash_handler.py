@@ -40,7 +40,7 @@ def respawn_dead_server(dead_server, conn, cursor):
     print(f"Respawning {dead_server} as {new_server} ......", flush=True)
 
     old_server_data = app.server_list.pop(dead_server)
-
+    print('old servers data',old_server_data)
     name, ipaddr = create_server(name=new_server)
     shards, index = old_server_data["shards"], old_server_data["index"]
 
@@ -52,8 +52,9 @@ def respawn_dead_server(dead_server, conn, cursor):
         },
         "shards": shards,
     }
-
+    print(payload)
     while True:
+        print('Well, I am here')
         try:
             print("respawn dead server payload : ", payload)
             result = requests.post(

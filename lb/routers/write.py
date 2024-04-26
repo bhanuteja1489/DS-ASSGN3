@@ -27,11 +27,12 @@ def write(req: Any=Body(...)):
         shards = {row[1]: {"students":[],"attr":list(row),"server":[]} for row in rows}
         mysql_cursor.execute("SELECT * FROM MapT")
         MapT_rows =mysql_cursor.fetchall()
-        
+        print('before : ',shards)
         for MapT_row in MapT_rows:
             shard_id = MapT_row[0]
             server = MapT_row[1]
             shards[shard_id]["server"].append(server)
+        print('after : ',shards)
 
         print(shards)
         for student in students:
