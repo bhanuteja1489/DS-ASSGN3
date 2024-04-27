@@ -39,7 +39,7 @@ def add_servers(req: Any = Body(...)):
             ip[name] = ipaddr
 
         message = "Added"
-
+        print('input servers :: ',servers)
         for server_name in servers:
             print("adding ::", server_name)
             message += f" {server_name},"
@@ -47,6 +47,7 @@ def add_servers(req: Any = Body(...)):
             app.server_list[server_name] = {
                 "index": randint(1, MAX_SERVER_INDEX),
                 "ip": ip[server_name],
+                "shards": servers[server_name],
             }
             for sh in servers[server_name]:
                 if sh not in app.hash_dict:

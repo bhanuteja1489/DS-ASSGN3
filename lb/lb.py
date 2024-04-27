@@ -2,7 +2,7 @@ from time import sleep
 
 
 from globals import app
-from routers import init, status, add, rm, update, write, read, delete,sync_app
+from routers import init, status, add, rm, update, write, read, delete,sync_app,read_server
 
 
 
@@ -20,7 +20,7 @@ app.include_router(write.router)
 app.include_router(read.router)
 app.include_router(delete.router)
 app.include_router(sync_app.router)
-
+app.include_router(read_server.router)
 
 
 

@@ -42,8 +42,10 @@ def respawn_dead_server(dead_server, conn, cursor):
     old_server_data = app.server_list.pop(dead_server)
     print('old servers data',old_server_data)
     name, ipaddr = create_server(name=new_server)
+    print('came all the way to here')
     shards, index = old_server_data["shards"], old_server_data["index"]
-
+    print(shards)
+    print(index)
     # make /config request to the new server
     payload = {
         "schema": {
